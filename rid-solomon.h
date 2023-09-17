@@ -11,11 +11,12 @@
 #include <vector>
 #include <algorithm>
 
+// определения простых тернарных операторов
 #define MAX(x, y) (x > y ? x : y)
 #define MIN(x, y) (x < y ? x : y)
 #define NULL 0
 
-//defining prime polynomials in GF^x for your use
+// определение простых мнгогочленов в GF^x
 #define PRIM(x) PRIM_ ## x
 #define PRIM_0 0
 #define PRIM_1 0
@@ -53,17 +54,19 @@
 // Тип данных может быть изменён в зависимости от требований памяти
 typedef unsigned long RS_WORD;
 
-// using namespace std;
-
+// функция поиска простых многочленов
 void FindPrimePolys(std::ostream* out, int fieldPower, int limit);
 
+// класс поля Галуа
+// fieldPower - мощность поля (количество элементов)
 class GaloisField
 {
-public:
+private:
     RS_WORD* powTable, *logTable;
     int fieldPower;
     RS_WORD characteristic, primitivePoly;
 
+public:
     GaloisField(int fieldPower);
     ~GaloisField();
     RS_WORD multNoLUT(RS_WORD a, RS_WORD b);
@@ -74,14 +77,17 @@ public:
     inline RS_WORD sqrt(RS_WORD x);
 };
 
+// функция инициализации
 void Init();
 
-
+// класс полинома
 class Poly
 {
-public:
+private:
     int n;
     RS_WORD* coef;
+
+public:
     Poly();
     Poly(int n, RS_WORD* coef);
     ~Poly();
@@ -92,6 +98,7 @@ public:
     void print();
 };
 
+// функции над полиномом
 Poly* Poly_Create(int n, RS_WORD* coef);
 void Poly_Free(Poly* poly);
 void Poly_Add(Poly* out, Poly* a, Poly* b);
@@ -105,12 +112,14 @@ void Poly_Trim(Poly* poly, int left, int right);
 void Poly_Append(Poly* out, Poly* a, Poly* b);
 void Poly_Reverse(Poly* out, Poly* in);
 
+// класс РС-кода
 class ReedSolomon
 {
-public:
+private:
     GaloisField gf;
-    ReedSolomon(int fieldPower);
 
+public:
+    ReedSolomon(int fieldPower);
     void createGenerator(Poly* out, int nsym);
     void encode(RS_WORD* out, RS_WORD* data, int k, int nsym);
     void calcSyndromes(Poly* out, Poly* msg, int nsym);
