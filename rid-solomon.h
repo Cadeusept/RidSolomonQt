@@ -62,11 +62,15 @@ void FindPrimePolys(std::ostream* out, int fieldPower, int limit);
 class GaloisField
 {
 private:
-    RS_WORD* powTable, *logTable;
-    int fieldPower;
-    RS_WORD characteristic, primitivePoly;
+
+    int _fieldPower;
+    RS_WORD _primitivePoly;
 
 public:
+
+    RS_WORD *_logTable, *_powTable;
+    RS_WORD _characteristic;
+
     GaloisField(int fieldPower);
     ~GaloisField();
     RS_WORD multNoLUT(RS_WORD a, RS_WORD b);
@@ -83,11 +87,10 @@ void Init();
 // класс полинома
 class Poly
 {
-private:
-    int n;
-    RS_WORD* coef;
-
 public:
+    int _n;
+    RS_WORD* _coef;
+
     Poly();
     Poly(int n, RS_WORD* coef);
     ~Poly();
@@ -116,7 +119,7 @@ void Poly_Reverse(Poly* out, Poly* in);
 class ReedSolomon
 {
 private:
-    GaloisField gf;
+    GaloisField _gf;
 
 public:
     ReedSolomon(int fieldPower);
