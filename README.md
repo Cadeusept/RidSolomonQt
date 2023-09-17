@@ -1,0 +1,1 @@
+# Rid-Solomon Qt Application
