@@ -58,7 +58,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_zip">
            <property name="text">
-            <string>Запаковать</string>
+            <string>Закодировать</string>
            </property>
           </widget>
          </item>
@@ -106,7 +106,7 @@
          <item>
           <widget class="QPushButton" name="pushButton_unzip">
            <property name="text">
-            <string>Распаковать</string>
+            <string>Раскодировать</string>
            </property>
           </widget>
          </item>
