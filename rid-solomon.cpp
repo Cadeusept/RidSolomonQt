@@ -447,16 +447,16 @@ bool ReedSolomon::correctErrata(Poly* msg, Poly* synd, std::vector<unsigned int>
     this->findErrorEvaluator(&errEval, synd, &errLoc, errLoc._n); //TODO determine if correct
     //Poly_Reverse(errEval, errEval); //reverse it for later use
     std::vector<RS_WORD> x(coefPos.size());
-    for (int i = 0; i < x.size(); i++)
+    for (int i = 0; (unsigned long long)i < x.size(); i++)
     {
         x[i] = _gf._powTable[coefPos[i]]; //TODO determine if correct
     }
     Poly e(msg->_n, nullptr);
-    for (int i = 0; i < x.size(); i++)
+    for (int i = 0; (unsigned long long)i < x.size(); i++)
     {
         RS_WORD xi = _gf._powTable[_gf._characteristic - coefPos[i]]; //TODO determine if equivalent to GaloisField::Inv(x[i])
         RS_WORD errLocPrime = 1;
-        for (int j = 0; j < x.size(); j++)
+        for (int j = 0; (unsigned long long)j < x.size(); j++)
         {
             if (j != i)
             {
@@ -538,7 +538,7 @@ bool ReedSolomon::findErrors(std::vector<unsigned int>* out, Poly* errLoc, int n
     {
         Poly_ChienSearch(out, &revErrLoc, n, &_gf);
     }
-    if (out->size() != errs)
+    if (out->size() != (unsigned long long)errs)
     {
         // Too many (or few) errors found by Chien Search for the errata locator polynomial!
         return false;
@@ -546,7 +546,7 @@ bool ReedSolomon::findErrors(std::vector<unsigned int>* out, Poly* errLoc, int n
     //map to string pos
     for (RS_WORD i = 0; i < out->size(); i++)
     {
-        if (out->at(i) >= n) //clearly something messed up
+        if (out->at(i) >= (unsigned long long)n) //clearly something messed up
         {
             return false;
         }
@@ -580,7 +580,7 @@ bool ReedSolomon::decode(RS_WORD* wholeOut, RS_WORD* out, RS_WORD* data, int k, 
     Poly msg(k + nsym, data);
     if (erasePos)
     {
-        if (erasePos->size() > nsym)
+        if (erasePos->size() > (unsigned long long)nsym)
         {
             if (debug) std::cout << "too many erasures to be corrected" << std::endl;
             return false;
@@ -641,5 +641,64 @@ bool ReedSolomon::decode(RS_WORD* wholeOut, RS_WORD* out, RS_WORD* data, int k, 
         memcpy(out, msg._coef, sizeof(RS_WORD) * k);
     }
     return true;
+}
+
+int code_file(FILE *input_file, FILE *coded_file) {
+    RS_WORD read_buf[BUFSIZE];  //буфер чтения
+    RS_WORD write_buf[BUFSIZE + NCHECKED]; //буфер записи
+    memset(read_buf, '\0', BUFSIZE);
+    memset(write_buf, '\0', BUFSIZE);
+    ReedSolomon rs(BUFSIZE);
+    int current_symb=0; //счетчик текущего символа
+
+    fseek(input_file,0,SEEK_END); //перемещение в конец файла чтобы узнать его размер
+    int file_size=ftell(input_file); //узнали размер файла
+    rewind(input_file); //вернули "курсор" в начало файла
+
+    //в цикле считаем вес каждого символа
+    for (int i=0; i<file_size; ++i){
+        unsigned char v;
+        //читаем новый блок
+        if (current_symb==0)
+            fread (read_buf,BUFSIZE,1,input_file);
+
+        v=read_buf[current_symb]; //получаем символ
+        if (++current_symb==BUFSIZE)
+            current_symb=0; //обнуляем счетчик если чтение блока закончено
+
+        rs.encode(write_buf, read_buf, BUFSIZE, NCHECKED);
+        fwrite(write_buf,BUFSIZE+NCHECKED,1,coded_file);
+    }
+
+    fclose(input_file);
+    fclose(coded_file);
+    return 0;
+}
+
+// TODO
+int decode_file(FILE *input_file, FILE *decoded_file)
+{
+    RS_WORD read_buf[BUFSIZE];  //буфер чтения
+    RS_WORD write_buf[BUFSIZE + NCHECKED]; //буфер записи
+    RS_WORD write_clean_buf[BUFSIZE];
+    memset(read_buf, '\0', BUFSIZE);
+    memset(write_buf, '\0', BUFSIZE);
+    ReedSolomon rs(BUFSIZE);
+
+    fseek(input_file,0,SEEK_END); //перемещение в конец файла чтобы узнать его размер
+    int file_size=ftell(input_file); //узнали размер файла
+    rewind(input_file); //вернули "курсор" в начало файла
+
+    //в цикле считаем вес каждого символа
+    for (int i=0; i<file_size; ++i){
+        fread (read_buf,BUFSIZE,1,input_file);
+
+        rs.decode(write_buf, write_clean_buf, read_buf, BUFSIZE, NCHECKED, nullptr, true);
+        fwrite(write_buf,BUFSIZE+NCHECKED,1,decoded_file);
+    }
+
+    fclose(input_file);
+    fclose(decoded_file);
+    return 0;
 }
 

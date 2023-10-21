@@ -35,7 +35,7 @@ void MainWindow::on_pushButton_zip_clicked()
         ui->listWidget_system_messages->addItem(QString("fopen: ошибка %1").arg(errno));
         ui->listWidget_system_messages->addItem(QString("Ошибка при открытии файла"));
     }else{
-        int flag=code_file(input_file,_input_zip_file.absoluteFilePath().toUtf8().constData(),output_file);
+        int flag=code_file(input_file, output_file);
 
         switch (flag) {
             case 0:

@@ -54,6 +54,9 @@
 // Тип данных может быть изменён в зависимости от требований памяти
 typedef unsigned long RS_WORD;
 
+const unsigned BUFSIZE = 16; // размер буфера
+const unsigned NCHECKED = 3; // количество проверочных битов
+
 // функция поиска простых многочленов
 void FindPrimePolys(std::ostream* out, int fieldPower, int limit);
 
@@ -135,5 +138,9 @@ public:
     void forneySyndromes(Poly* out, Poly* synd, std::vector<unsigned int>* pos, int n);
     bool decode(RS_WORD* wholeOut, RS_WORD* out, RS_WORD* data, int k, int nsym, std::vector<unsigned int>* erasePos, bool debug);
 };
+
+int code_file(FILE *input_file, FILE *coded_file);
+
+int decode_file(FILE *input_file, FILE *decoded_file);
 
 #endif
