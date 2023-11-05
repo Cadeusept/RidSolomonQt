@@ -52,10 +52,11 @@
 #define PRIM_31 0x80000009
 
 // Тип данных может быть изменён в зависимости от требований памяти
-typedef unsigned long RS_WORD;
+typedef char RS_WORD;
 
-const unsigned BUFSIZE = 16; // размер буфера
-const unsigned NCHECKED = 3; // количество проверочных битов
+const unsigned BITS = 4;        //размерность поля Галуа
+const unsigned BUFSIZE = 3;    // размер буфера
+const unsigned NCHECKED = 1;   // количество проверочных битов
 
 // функция поиска простых многочленов
 void FindPrimePolys(std::ostream* out, int fieldPower, int limit);

@@ -73,6 +73,16 @@ GaloisField::GaloisField(int fieldPower)
     {
         _powTable[i] = _powTable[i - _characteristic];
     }
+    /* //Debug вывод
+    for (unsigned int i = 0; i < this->_characteristic * 2; i++)
+        {
+            std::cout << "2^" << i << "=" << _powTable[i] << std::endl;
+        }
+        for (unsigned int i = 0; i < this->_characteristic + 1; i++)
+        {
+            std::cout << "log" << i << "=" << _logTable[i] << std::endl;
+        }
+    */
 }
 
 GaloisField::~GaloisField()
@@ -647,40 +657,33 @@ int code_file(FILE *input_file, FILE *coded_file) {
     RS_WORD read_buf[BUFSIZE];  //буфер чтения
     RS_WORD write_buf[BUFSIZE + NCHECKED]; //буфер записи
     memset(read_buf, '\0', BUFSIZE);
-    memset(write_buf, '\0', BUFSIZE);
+    memset(write_buf, '\0', BUFSIZE + NCHECKED);
     ReedSolomon rs(BUFSIZE);
-    int current_symb=0; //счетчик текущего символа
 
     fseek(input_file,0,SEEK_END); //перемещение в конец файла чтобы узнать его размер
     int file_size=ftell(input_file); //узнали размер файла
     rewind(input_file); //вернули "курсор" в начало файла
 
-    //в цикле считаем вес каждого символа
-    for (int i=0; i<file_size; ++i){
-        unsigned char v;
-        //читаем новый блок
-        if (current_symb==0)
-            fread (read_buf,BUFSIZE,1,input_file);
+    //в цикле кодируем вообщение по частям из буфера
+    for (unsigned int i=0; i < file_size/BUFSIZE + (file_size%BUFSIZE ? 1 : 0) ; i++){
+        fread (read_buf, BUFSIZE, 1, input_file);
 
-        v=read_buf[current_symb]; //получаем символ
-        if (++current_symb==BUFSIZE)
-            current_symb=0; //обнуляем счетчик если чтение блока закончено
+        Poly r(BUFSIZE + NCHECKED, read_buf);
+        rs.encode(r._coef, read_buf, BUFSIZE, NCHECKED);
 
-        rs.encode(write_buf, read_buf, BUFSIZE, NCHECKED);
-        fwrite(write_buf,BUFSIZE+NCHECKED,1,coded_file);
+        fwrite(r._coef, BUFSIZE + NCHECKED, 1, coded_file);
     }
 
     fclose(input_file);
     fclose(coded_file);
+    std::cout << "CODED SUCCESSFULLY" << std::endl;
     return 0;
 }
 
-// TODO
 int decode_file(FILE *input_file, FILE *decoded_file)
 {
     RS_WORD read_buf[BUFSIZE];  //буфер чтения
-    RS_WORD write_buf[BUFSIZE + NCHECKED]; //буфер записи
-    RS_WORD write_clean_buf[BUFSIZE];
+    RS_WORD write_buf[BUFSIZE]; //буфер записи
     memset(read_buf, '\0', BUFSIZE);
     memset(write_buf, '\0', BUFSIZE);
     ReedSolomon rs(BUFSIZE);
@@ -689,16 +692,23 @@ int decode_file(FILE *input_file, FILE *decoded_file)
     int file_size=ftell(input_file); //узнали размер файла
     rewind(input_file); //вернули "курсор" в начало файла
 
-    //в цикле считаем вес каждого символа
-    for (int i=0; i<file_size; ++i){
-        fread (read_buf,BUFSIZE,1,input_file);
+    //в цикле декодируем вообщение по частям из буфера
+    for (unsigned int i=0; i < file_size/(BUFSIZE+NCHECKED) + (file_size%(BUFSIZE+NCHECKED) ? 1 : 0); i++){
+        fread(read_buf, BUFSIZE + NCHECKED, 1, input_file);
 
-        rs.decode(write_buf, write_clean_buf, read_buf, BUFSIZE, NCHECKED, nullptr, true);
-        fwrite(write_buf,BUFSIZE+NCHECKED,1,decoded_file);
+        Poly e(BUFSIZE + NCHECKED, read_buf);
+        Poly d(BUFSIZE, write_buf);
+        bool f = rs.decode(d._coef, nullptr, e._coef, BUFSIZE, NCHECKED, nullptr, true);
+        if (f) {
+            fwrite(d._coef, BUFSIZE, 1, decoded_file);
+        } else {
+            std::cout << "ERROR DECODING" << std::endl;
+        }
     }
 
     fclose(input_file);
     fclose(decoded_file);
+    std::cout << "DECODED SUCCESSFULLY" << std::endl;
     return 0;
 }
 
